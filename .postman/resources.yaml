@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 815f6aab-eb4e-474a-83c3-73c63d4a9ad3
+
+localResources:
+  collections:
+    - ../api_tests/CineFlex API
