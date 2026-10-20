@@ -6,7 +6,7 @@
 
 **▶️ [Ver video de sustentación (3 min)](https://youtu.be/REEMPLAZAR_CON_TU_LINK)**
 
-![QA Pipeline](https://github.com/TU_USUARIO/qa-cineflex-project/actions/workflows/qa-pipeline.yml/badge.svg)
+![QA Pipeline](https://github.com/harrihurtado/qa-cineflex-project/actions/workflows/qa-pipeline.yml/badge.svg)
 
 ---
 
@@ -52,7 +52,7 @@ qa-cineflex-project/
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/TU_USUARIO/qa-cineflex-project.git
+git clone https://github.com/harrihurtado/qa-cineflex-project.git
 cd qa-cineflex-project
 
 # 2. Instalar dependencias del backend
@@ -172,4 +172,4 @@ El archivo `.github/workflows/qa-pipeline.yml` se ejecuta en **cada push** y en 
 ## 👥 Equipo
 | Integrante | Rol |
 |---|---|
-| _Nombre_ | _Rol_ |
+| _Harrisson Montaña_ | _SM_ |
