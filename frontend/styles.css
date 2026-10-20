@@ -1,0 +1,20 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; background: #0f172a; color: #f1f5f9; }
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: #e11d48; }
+.logo { font-weight: bold; font-size: 1.3rem; }
+main { max-width: 900px; margin: 30px auto; padding: 0 16px; }
+.vista { display: none; }
+.vista.activa { display: block; }
+.oculto { display: none; }
+form { display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+input { padding: 10px; border-radius: 6px; border: 1px solid #334155; }
+button { padding: 10px 16px; border: 0; border-radius: 6px; background: #e11d48; color: #fff; cursor: pointer; }
+button:disabled { background: #64748b; cursor: not-allowed; }
+.mensaje { color: #fca5a5; }
+#lista-peliculas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.pelicula { background: #1e293b; padding: 16px; border-radius: 10px; }
+#mapa-asientos { display: grid; grid-template-columns: repeat(6, 56px); gap: 8px; margin: 16px 0; }
+.asiento.libre { background: #10b981; }
+.asiento.ocupado { background: #475569; }
+.asiento.seleccionado { background: #f59e0b; }
+#ticket-virtual { background: #fff; color: #0f172a; padding: 20px; border-radius: 10px; max-width: 360px; }

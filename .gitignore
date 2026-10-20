@@ -1,0 +1,4 @@
+node_modules/
+performance/reporte/
+performance/*.jtl
+*.log

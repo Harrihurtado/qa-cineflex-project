@@ -1,0 +1,43 @@
+name: QA Pipeline CineFlex
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  api-tests:
+    name: API Tests (Newman)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias del backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Levantar backend en segundo plano
+        working-directory: backend
+        run: |
+          nohup npm start > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:3000/api/health && break
+            sleep 1
+          done
+
+      - name: Instalar Newman
+        run: npm install -g newman
+
+      - name: Ejecutar colección Postman con Newman
+        run: newman run api_tests/CineFlex_API_Collection.json -e api_tests/CineFlex_Environment.json
+
+      - name: Logs del servidor (si algo falla)
+        if: failure()
+        run: cat backend/server.log

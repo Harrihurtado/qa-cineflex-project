@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineFlex</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="logo">🎬 CineFlex</span>
+    <button id="btn-logout" class="oculto">Cerrar sesión</button>
+  </header>
+
+  <main>
+    <section id="vista-login" class="vista">
+      <h1 id="titulo-login">Iniciar sesión</h1>
+      <form id="form-login">
+        <input id="input-email" type="email" placeholder="Correo">
+        <input id="input-password" type="password" placeholder="Contraseña">
+        <button id="btn-login" type="submit">Ingresar</button>
+      </form>
+      <p id="msg-login" class="mensaje"></p>
+    </section>
+
+    <section id="vista-cartelera" class="vista">
+      <h1 id="titulo-cartelera">Cartelera</h1>
+      <div id="lista-peliculas"></div>
+    </section>
+
+    <section id="vista-asientos" class="vista">
+      <h1 id="titulo-asientos">Selecciona tu asiento</h1>
+      <p id="pelicula-seleccionada"></p>
+      <div id="mapa-asientos"></div>
+      <button id="btn-continuar-pago" disabled>Continuar al pago</button>
+    </section>
+
+    <section id="vista-pago" class="vista">
+      <h1 id="titulo-pago">Pago</h1>
+      <form id="form-pago">
+        <input id="input-titular" placeholder="Titular">
+        <input id="input-tarjeta" placeholder="Número de tarjeta">
+        <input id="input-vencimiento" placeholder="MM/AA">
+        <input id="input-cvv" placeholder="CVV">
+        <button id="btn-pagar" type="submit">Pagar</button>
+      </form>
+      <p id="msg-pago" class="mensaje"></p>
+    </section>
+
+    <section id="vista-ticket" class="vista">
+      <h1 id="titulo-ticket">¡Compra exitosa!</h1>
+      <div id="ticket-virtual"></div>
+      <button id="btn-volver-cartelera">Volver a cartelera</button>
+    </section>
+  </main>
+
+  <script>
+    const API = '/api';
+    const estado = { intentosFallidos: 0, pelicula: null, asiento: null };
+    const RUTAS = {
+      '#/login': 'vista-login', '#/cartelera': 'vista-cartelera',
+      '#/asientos': 'vista-asientos', '#/pago': 'vista-pago', '#/ticket': 'vista-ticket'
+    };
+    const $ = id => document.getElementById(id);
+    const token = () => sessionStorage.getItem('token');
+
+    function mostrar(ruta) {
+      Object.values(RUTAS).forEach(v => $(v).classList.remove('activa'));
+      $(RUTAS[ruta]).classList.add('activa');
+      $('btn-logout').classList.toggle('oculto', ruta === '#/login');
+    }
+
+    // Router con guardia de sesión (protege el botón "Atrás")
+    async function router() {
+      const ruta = RUTAS[location.hash] ? location.hash : '#/login';
+      if (ruta !== '#/login' && !token()) { location.replace('#/login'); return; }
+      if (ruta === '#/login' && token()) { location.replace('#/cartelera'); return; }
+      if ((ruta === '#/asientos' && !estado.pelicula) || (ruta === '#/pago' && !estado.asiento)) {
+        location.replace('#/cartelera'); return;
+      }
+      mostrar(ruta);
+      if (ruta === '#/cartelera') await cargarCartelera();
+      if (ruta === '#/asientos') await cargarAsientos();
+    }
+    window.addEventListener('hashchange', router);
+    window.addEventListener('load', router);
+
+    // LOGIN con bloqueo preventivo tras 3 intentos
+    $('form-login').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (estado.intentosFallidos >= 3) return;
+      const res = await fetch(API + '/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: $('input-email').value, password: $('input-password').value })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        sessionStorage.setItem('token', data.token);
+        estado.intentosFallidos = 0;
+        $('msg-login').textContent = '';
+        location.hash = '#/cartelera';
+      } else {
+        estado.intentosFallidos++;
+        if (estado.intentosFallidos >= 3) {
+          $('btn-login').disabled = true;
+          $('msg-login').textContent = 'Cuenta bloqueada temporalmente por 3 intentos fallidos';
+        } else {
+          $('msg-login').textContent = `${data.error}. Intento ${estado.intentosFallidos} de 3`;
+        }
+      }
+    });
+
+    async function cargarCartelera() {
+      const res = await fetch(API + '/cartelera', { headers: { Authorization: 'Bearer ' + token() } });
+      if (res.status === 401) { sessionStorage.removeItem('token'); location.replace('#/login'); return; }
+      const pelis = await res.json();
+      $('lista-peliculas').innerHTML = pelis.map(p => `
+        <article class="pelicula" data-id="${p.id}">
+          <h3 class="pelicula-titulo">${p.titulo}</h3>
+          <p class="pelicula-genero">${p.genero} · ${p.duracion} min</p>
+          <button class="btn-seleccionar" data-id="${p.id}">Comprar</button>
+        </article>`).join('');
+      document.querySelectorAll('.btn-seleccionar').forEach(b => b.addEventListener('click', () => {
+        estado.pelicula = pelis.find(p => p.id == b.dataset.id);
+        location.hash = '#/asientos';
+      }));
+    }
+
+    async function cargarAsientos() {
+      estado.asiento = null;
+      $('btn-continuar-pago').disabled = true;
+      $('pelicula-seleccionada').textContent = estado.pelicula.titulo;
+      const lista = await (await fetch(`${API}/asientos/${estado.pelicula.id}`)).json();
+      $('mapa-asientos').innerHTML = lista.map(a =>
+        `<button class="asiento ${a.ocupado ? 'ocupado' : 'libre'}" data-codigo="${a.codigo}" ${a.ocupado ? 'disabled' : ''}>${a.codigo}</button>`
+      ).join('');
+      document.querySelectorAll('.asiento.libre').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('.asiento.seleccionado').forEach(x => x.classList.remove('seleccionado'));
+        b.classList.add('seleccionado');
+        estado.asiento = b.dataset.codigo;
+        $('btn-continuar-pago').disabled = false;
+      }));
+    }
+
+    $('btn-continuar-pago').addEventListener('click', () => { location.hash = '#/pago'; });
+
+    $('form-pago').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('msg-pago').textContent = '';
+      const res = await fetch(API + '/reservas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
+        body: JSON.stringify({
+          peliculaId: estado.pelicula.id, asiento: estado.asiento,
+          tarjeta: {
+            titular: $('input-titular').value, numero: $('input-tarjeta').value.replace(/\s/g, ''),
+            vencimiento: $('input-vencimiento').value, cvv: $('input-cvv').value
+          }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { $('msg-pago').textContent = data.error; return; }
+      $('ticket-virtual').innerHTML = `
+        <p id="ticket-id">${data.ticket.id}</p>
+        <p id="ticket-pelicula">${data.ticket.pelicula}</p>
+        <p id="ticket-asiento">Asiento ${data.ticket.asiento}</p>`;
+      location.hash = '#/ticket';
+    });
+
+    $('btn-volver-cartelera').addEventListener('click', () => { location.hash = '#/cartelera'; });
+
+    $('btn-logout').addEventListener('click', () => {
+      sessionStorage.removeItem('token');
+      estado.pelicula = null; estado.asiento = null;
+      location.hash = '#/login';
+    });
+  </script>
+</body>
+</html>
