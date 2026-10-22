@@ -1,0 +1,6 @@
+name: CineFlex Env
+values:
+  - key: baseUrl
+    value: 'http://localhost:3000'
+  - key: token
+    value: ''

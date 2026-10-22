@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 815f6aab-eb4e-474a-83c3-73c63d4a9ad3
+
+localResources:
+  collections:
+    - ../api_tests/CineFlex API
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../postman/collections/CineFlex API: 157e0e3b-9ee4-4cfa-853e-a15fdbec4168

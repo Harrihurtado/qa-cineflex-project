@@ -4,7 +4,7 @@
 
 ## 🎥 Video de sustentación
 
-**▶️ [Ver video de sustentación (3 min)](https://youtu.be/REEMPLAZAR_CON_TU_LINK)**
+**▶️ [Ver video de sustentación (3 min)](https://drive.google.com/file/d/1SIRLhyrdDB_5YvwkmT92yveIu52W9bAu/view?usp=drive_link)**
 
 ![QA Pipeline](https://github.com/harrihurtado/qa-cineflex-project/actions/workflows/qa-pipeline.yml/badge.svg)
 
