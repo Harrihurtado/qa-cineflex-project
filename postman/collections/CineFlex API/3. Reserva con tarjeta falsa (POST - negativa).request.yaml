@@ -1,0 +1,40 @@
+$kind: http-request
+url: "{{baseUrl}}/api/reservas"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "peliculaId": 3,
+      "asiento": "E6",
+      "tarjeta": {
+        "titular": "QA Tester",
+        "numero": "1234567890123456",
+        "vencimiento": "12/30",
+        "cvv": "123"
+      }
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("El backend rechaza la transacción (400 o 402)", () => {
+        pm.expect(pm.response.code).to.be.oneOf([400, 402]);
+      });
+      const json = pm.response.json();
+      pm.test("Mensaje de error correcto", () => {
+        pm.expect(json.error).to.eql("Pago rechazado: tarjeta inválida");
+      });
+      pm.test("No se generó ticket", () => {
+        pm.expect(json).to.not.have.property("ticket");
+      });
+      pm.test("Content-Type es JSON", () => {
+        pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+    language: text/javascript
+order: 3000

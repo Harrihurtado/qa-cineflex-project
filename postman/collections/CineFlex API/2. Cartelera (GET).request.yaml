@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/api/cartelera"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200 OK", () => pm.response.to.have.status(200));
+      let json;
+      pm.test("La respuesta es un JSON válido", () => {
+        json = pm.response.json();
+        pm.expect(json).to.be.an("array").that.is.not.empty;
+      });
+      pm.test("SLA: tiempo de respuesta < 300ms", () => {
+        pm.expect(pm.response.responseTime).to.be.below(300);
+      });
+      pm.test("Cada película tiene id, titulo y genero", () => {
+        json.forEach(p => pm.expect(p).to.include.all.keys("id", "titulo", "genero"));
+      });
+    language: text/javascript
+order: 2000

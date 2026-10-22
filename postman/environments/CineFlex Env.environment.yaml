@@ -4,4 +4,3 @@ values:
     value: 'http://localhost:3000'
   - key: token
     value: ''
-color: 120
